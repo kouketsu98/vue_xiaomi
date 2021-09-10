@@ -42,7 +42,7 @@
 </template>
 
 <script>
-	import axios from 'axios';
+	import http from '@/utils/http';
 	import MiNav from '@/components/MiNav';
         export default {
                 name: "Category",
@@ -65,55 +65,20 @@
 	        watch: {
                         activeId:function(newValue,oldValue){
                                 //发送ajax，请求页面的初始数据
-                                axios({
-                                        url: "/category/list/" + newValue,
-                                })
-                                        .then(res => {
-                                                if(res.status === 200) {
-                                                        switch(res.data.code) {
-                                                                case 200:
-                                                                       this.listSub = res.data.data;
-                                                                        break;
-                                                                case 199:
-                                                                case 401:
-                                                                case 404:
-                                                                case 500:
-                                                                        console.log(res.data.msg);
-                                                        }
-                                                }else {
-                                                        console.log(res.statusText);
-                                                }
-                                        })
-                                        .catch(err => {
-                                                console.log(err.message);
-                                        });
+                                http({  url: "/category/list/" + newValue,})
+                                        .then(data => this.listSub =data)
+	                                .catch(() => {});
                         }
 	        },
 	        created() {
                         //发送ajax，请求页面的初始数据
-		        axios({
-			        url: "/category/list/0"
-		        })
-		        .then(res => {
-		                if(res.status === 200) {
-		                        switch(res.data.code) {
-			                        case 200:
-			                                this.listMain = res.data.data;
-			                                this.activeId = res.data.data[0].id;
-			                                break;
-			                        case 199:
-			                        case 401:
-			                        case 404:
-			                        case 500:
-			                                console.log(res.data.msg);
-		                        }
-		                }else {
-		                        console.log(res.statusText);
-		                }
-		        })
-		        .catch(err => {
-		                console.log(err.message);
-		        });
+		        http({url: "/category/list/0"})
+			        .then(data => {
+                                        this.listMain = data;
+                                        this.activeId = data[0].id;
+			        })
+			        .catch(() => {});
+
 	        }
         };
 </script>

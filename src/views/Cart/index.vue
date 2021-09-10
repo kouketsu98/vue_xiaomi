@@ -2,7 +2,7 @@
 	<div class="container">
 		<template v-if="list.length > 0">
 			<span @click="mode = !mode"  v-text="mode ? '完成' : '编辑' "></span>
-			<ul >
+			<ul @click="changeCount">
 				<li v-for="item in list" :key="item.id">
 					<input  v-model="item.checked1" type="checkbox" v-show="!mode">
 					<input  v-model="item.checked2" type="checkbox" v-show="mode">
@@ -17,7 +17,7 @@
 			<!--普通状态-->
 			<div v-show="!mode">
 				<input v-model="isCheckedAll" type="checkbox">全选
-				<p>合计：￥<span v-text="total"></span>00元</p>
+				<p>合计：￥<span v-text="total"></span>.00元</p>
 				<button :disabled="amount === 0">
 					结算 <span v-show="amount !== 0" v-text="`(${amount})`"></span>
 				</button>
@@ -25,7 +25,7 @@
 			<!--编辑状态-->
 			<div v-show="mode">
 				<input v-model="isCheckedAll" type="checkbox">全选
-				<button>删除</button>
+				<button @click="">删除</button>
 			</div>
 		</template>
 
@@ -36,7 +36,6 @@
 </template>
 
 <script>
-	import axios from 'axios';
         import MiNav from '@/components/MiNav';
 	export default {
 	        name: "Cart",
@@ -72,37 +71,33 @@
 				}
 			}
 		},
-		created() {
-                        axios({
-	                        method: "post",
-                                url: "/cart/list" ,
-	                        headers: {Authorization: sessionStorage.getItem('token')}
-                        })
-                                .then(res => {
-                                        if(res.status === 200) {
-                                                switch(res.data.code) {
-                                                        case 200:
-                                                                res.data.data.forEach(item => {
-                                                                   item.checked1 = false;
-                                                                   item.checked2 = false;
-                                                                });
-                                                               this.list = res.data.data;
-                                                                break;
-                                                        case 199:
-                                                        case 401:
-                                                        case 404:
-                                                        case 500:
-                                                                console.log(res.data.msg);
-                                                }
-                                        }else {
-                                                console.log(res.statusText);
-                                        }
-                                })
-                                .catch(err => {
-                                        console.log(err.message);
-                                });
-		}
+		methods: {
+	                changeCount(e) {
+	                        if(e.target.classList.contains('btn-decrease') || e.target.classList.contains('btn-increase')) {
+					var id = parseInt(e.target.dataset.id);
+					var url= `/cart/${e.target.classList.contains('btn-decrease') ? "decrease" : "increase"}/${id}`;
+                                      this.$http({method: "post", url})
+	                                       .then(() => {
+                                                       var target = this.list.find(item => item.id === id);
+                                                       e.target.classList.contains('btn-decrease') ? target.count -- : target.count ++;
+                                       })
+                                      .catch(() => {});
 
+
+	                        }
+	                },
+
+		},
+		created() {
+	               this.$http({method: "post",url: "/cart/list"})
+		                .then(data =>{
+                                        data.forEach(item =>{
+                                                item.checked1 = false;
+                                                item.checked2 = false;
+                                        });
+                                        this.list = data;
+	                });
+		},
 	};
 </script>
 
